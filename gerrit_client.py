@@ -1,10 +1,10 @@
 import urllib2
 import json
+import settings
 
-url = 'https://review.openstack.org/changes/?q=is:open+owner:asledzinskiy&q=is:open+reviewer:asledzinskiy+-owner:asledzinskiy&q=is:closed+owner:asledzinskiy+limit:5&o=LABELS'
 
 def get_account_id():
-    req = urllib2.Request("https://review.openstack.org/accounts/asledzinskiy")
+    req = urllib2.Request("https://review.openstack.org/accounts/{0}".format(settings.gerrit_account_name))
     opener = urllib2.build_opener(urllib2.HTTPHandler)
     s = opener.open(req).read()
     opener.close()
@@ -12,7 +12,7 @@ def get_account_id():
     return data['_account_id']
 
 def get_not_reviewed_patches():
-    req = urllib2.Request(url)
+    req = urllib2.Request(settings.reviews_url)
     opener = urllib2.build_opener(urllib2.HTTPHandler)
     s = opener.open(req).read()
     opener.close()
