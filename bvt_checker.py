@@ -44,7 +44,7 @@ class SystemTray(object):
         self.indicator = appindicator.Indicator.new(APPINDICATOR_ID, os.path.abspath('green.png'), appindicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(self.build_menu())
-        gobject.timeout_add_seconds(300, self.set_icon)
+        gobject.timeout_add_seconds(30, self.set_icon)
         gtk.main()
 
     def build_menu(self):
@@ -58,11 +58,16 @@ class SystemTray(object):
     def quit(self, source):
         gtk.main_quit()
 
+    def choose_icon(self):
+        if not is_bvt_ok():
+            return 'red.png'
+        if gerrit_client.get_not_reviewed_patches():
+            return 'orange.png'
+        return 'green.png'
+
     def set_icon(self):
-        if is_bvt_ok():
-            self.indicator.set_icon(os.path.abspath('green.png'))
-        else:
-            self.indicator.set_icon(os.path.abspath('red.png'))
+        icon = self.choose_icon()
+        self.indicator.set_icon(os.path.abspath(icon))
         return True
 
 if __name__ == "__main__":
