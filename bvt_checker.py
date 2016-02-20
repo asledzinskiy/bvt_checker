@@ -6,7 +6,7 @@ import time
 from gi.repository import GObject as gobject
 import urllib2
 import json
-
+import gerrit_client
 
 APPINDICATOR_ID = 'myappindicator'
 RELEASE = '8.0'
