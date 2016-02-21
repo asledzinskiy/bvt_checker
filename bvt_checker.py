@@ -41,7 +41,8 @@ class SystemTray(object):
         self.indicator = appindicator.Indicator.new(settings.APPINDICATOR_ID, os.path.abspath('green.png'), appindicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(self.build_menu())
-        gobject.timeout_add_seconds(30, self.set_icon)
+        self.set_icon()
+        gobject.timeout_add_seconds(300, self.set_icon)
         gtk.main()
 
     def build_menu(self):
