@@ -19,9 +19,9 @@ def get_not_reviewed_patches():
     data = json.loads(s.replace(")]}'", ''))
     review_ids = []
     account_id = get_account_id()
+    reviewers_ids = []
     for review in data[1]:
-        for value in review['labels']['Code-Review'].values():
-            reviewers_ids = []
+        for value in review['labels']['Code-Review'].values():            
             if type(value) == dict:
                 if '_account_id' in value:
                     reviewers_ids.append(value['_account_id'])

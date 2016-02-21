@@ -52,6 +52,7 @@ class SystemTray(object):
         if gerrit_client.get_not_reviewed_patches():
             for review in gerrit_client.get_not_reviewed_patches():
                 item_review = gtk.MenuItem(review)
+                item_review.connect('activate', self.open_url, review)
                 menu.append(item_review)
 
         menu.show_all()
@@ -59,6 +60,9 @@ class SystemTray(object):
 
     def quit(self, source):
         gtk.main_quit()
+
+    def open_url(self, source, url):
+        os.system('python -m webbrowser -t "{0}"'.format(url))
 
     def choose_icon(self):
         if not is_bvt_ok():
