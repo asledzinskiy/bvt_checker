@@ -42,7 +42,7 @@ class SystemTray(object):
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
         self.indicator.set_menu(self.build_menu())
         self.set_icon()
-        gobject.timeout_add_seconds(300, self.set_icon)
+        gobject.timeout_add_seconds(settings.POLLING_INTERVAL, self.set_icon)
         gtk.main()
 
     def build_menu(self):

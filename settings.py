@@ -4,3 +4,4 @@ APPINDICATOR_ID = 'myappindicator'
 RELEASE = '8.0'
 BVT_JOB = 'https://product-ci.infra.mirantis.net/job/{}.test_all/api/json'.format(RELEASE)
 BVT_TEST_JOB = 'https://product-ci.infra.mirantis.net/job/{0}.test_all/{1}/api/json'
+POLLING_INTERVAL = 300
