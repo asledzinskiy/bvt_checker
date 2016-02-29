@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 from gi.repository import Gtk as gtk
 from gi.repository import AppIndicator3 as appindicator
 import signal
@@ -8,6 +10,7 @@ import urllib2
 import json
 import gerrit_client
 import settings
+import sys
 
 
 def get_last_build():
@@ -40,41 +43,43 @@ class SystemTray(object):
     def __init__(self):
         self.indicator = appindicator.Indicator.new(settings.APPINDICATOR_ID, os.path.abspath('green.png'), appindicator.IndicatorCategory.APPLICATION_STATUS)
         self.indicator.set_status(appindicator.IndicatorStatus.ACTIVE)
-        self.indicator.set_menu(self.build_menu())
+        self.indicator.set_menu(self.build_menu({}))
         self.set_icon()
         gobject.timeout_add_seconds(settings.POLLING_INTERVAL, self.set_icon)
         gtk.main()
 
-    def build_menu(self):
+    def build_menu(self, active_reviews):
         menu = gtk.Menu()
+        for review in active_reviews.keys():
+            item_review = gtk.MenuItem(active_reviews[review])
+            item_review.connect('activate', self.open_url, review)
+            menu.append(item_review)
         item_quit = gtk.MenuItem('Quit')
         item_quit.connect('activate', self.quit)
         menu.append(item_quit)
-        if gerrit_client.get_not_reviewed_patches():
-            for review in gerrit_client.get_not_reviewed_patches():
-                item_review = gtk.MenuItem(review)
-                item_review.connect('activate', self.open_url, review)
-                menu.append(item_review)
 
         menu.show_all()
         return menu
 
     def quit(self, source):
         gtk.main_quit()
+        sys.exit()
 
     def open_url(self, source, url):
+        self.indicator.set_icon(os.path.abspath('grey.png'))
         os.system('python -m webbrowser -t "{0}"'.format(url))
 
-    def choose_icon(self):
+    def choose_icon(self, active_reviews):
         if not is_bvt_ok():
             return 'red.png'
-        if gerrit_client.get_not_reviewed_patches():            
+        if active_reviews:
             return 'orange.png'
         return 'green.png'
 
     def set_icon(self):
-        self.indicator.set_menu(self.build_menu())
-        icon = self.choose_icon()
+        active_reviews = gerrit_client.get_not_reviewed_patches(settings.gerrit_account_name, settings.reviews_url, settings.SKIP_LOWER_THAN)
+        self.indicator.set_menu(self.build_menu(active_reviews))
+        icon = self.choose_icon(active_reviews)
         self.indicator.set_icon(os.path.abspath(icon))
         return True
 
@@ -82,4 +87,3 @@ if __name__ == "__main__":
     SystemTray()
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     gtk.main()
-
