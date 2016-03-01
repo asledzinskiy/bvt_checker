@@ -36,9 +36,12 @@ def bvt_health():
     return job_data['result']
 
 def is_bvt_ok():
-    if bvt_health() == 'FAILURE':
-        return False
-    return True
+    res = bvt_health()
+    if res is None:
+        return -1
+    if res == 'FAILURE':
+        return 0
+    return 1
 
 
 class SystemTray(object):
@@ -78,14 +81,17 @@ class SystemTray(object):
 
     def open_url(self, source, url):
         # Show OpenStack logo while status updating by pooling interval
-        self.indicator.set_icon(os.path.abspath('grey.png'))
+        self.indicator.set_icon(os.path.abspath('openstack.png'))
         os.system('python -m webbrowser -t "{0}"'.format(url))
 
     def choose_icon(self, active_reviews):
-        if not is_bvt_ok():
+        bvt_result = is_bvt_ok()
+        if bvt_result == -1:
+            return 'wait.png'
+        elif bvt_result == 0:
             return 'red.png'
-        if active_reviews:
-            return 'orange.png'
+        elif active_reviews and bvt_result == 1:
+            return 'yellow.png'
         return 'green.png'
 
     def set_icon(self):
