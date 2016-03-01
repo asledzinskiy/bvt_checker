@@ -1,13 +1,19 @@
 import urllib2
 import json
+import threading
+import Queue
 
 
 def get_json_from_url(url):
-    req = urllib2.Request(url)
-    opener = urllib2.build_opener(urllib2.HTTPHandler)
-    s = opener.open(req).read()
-    opener.close()
-    return json.loads(s.replace(")]}'", ''))
+    try:
+        req = urllib2.Request(url)
+        opener = urllib2.build_opener(urllib2.HTTPHandler)
+        s = opener.open(req).read()
+        opener.close()
+        return json.loads(s.replace(")]}'", ''))
+    except:
+        return None
+
 
 def get_account_id(gerrit_account_name):
     req = urllib2.Request("https://review.openstack.org/accounts/{0}".format(gerrit_account_name))
@@ -17,12 +23,40 @@ def get_account_id(gerrit_account_name):
     data = json.loads(s.replace(")]}'", ''))
     return data['_account_id']
 
+
+def gerrit_read(review_id, q):
+    url = 'https://review.openstack.org/changes/{0}/reviewers'.format(review_id)
+    print url
+    q.put((review_id, get_json_from_url(url)))
+
+
 def get_not_reviewed_patches(gerrit_account_name, reviews_url, skip_lower_than=-2):
     data = get_json_from_url(reviews_url)
     active_reviews = {}
     account_id = get_account_id(gerrit_account_name)
+
+    # Start multiple threads to read from Gerrit in parallel
+    q = Queue.Queue()
+    gerrit_read_threads = []
     for review in data[1]:
-        code_reviewers = get_json_from_url('https://review.openstack.org/changes/{0}/reviewers'.format(review['id']))
+        gerrit_read_thread = threading.Thread(target=gerrit_read, args=(review['id'], q))
+        gerrit_read_thread.start()
+        gerrit_read_threads.append(gerrit_read_thread)
+
+    workers = len(gerrit_read_threads)
+
+    # Wait while all threads are finished
+    for gerrit_read_thread in gerrit_read_threads:
+        gerrit_read_thread.join()
+
+    gerrit_read_results = {}
+    for x in range(workers):
+        res = q.get()  # (review_id , code_reviewers)
+        gerrit_read_results[res[0]] = res[1]
+
+    # Parse code_reviewers for each review
+    for review in data[1]:
+        code_reviewers = gerrit_read_results[review['id']]
 
         # Collect all reviewers who set any value to the review
         reviewers_ids = set()

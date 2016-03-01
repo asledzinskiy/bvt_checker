@@ -77,6 +77,7 @@ class SystemTray(object):
         sys.exit()
 
     def open_url(self, source, url):
+        # Show OpenStack logo while status updating by pooling interval
         self.indicator.set_icon(os.path.abspath('grey.png'))
         os.system('python -m webbrowser -t "{0}"'.format(url))
 
