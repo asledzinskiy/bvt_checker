@@ -12,7 +12,7 @@ def get_json_from_url(url):
         opener.close()
         return json.loads(s.replace(")]}'", ''))
     except:
-        return None
+        return {}
 
 
 def get_account_id(gerrit_account_name):
